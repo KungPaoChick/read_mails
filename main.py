@@ -16,7 +16,9 @@ class Client_User:
         self.password = password
 
     def register(self):
-        user_data = {}
+        user_data = {
+            'uid_limit': 5
+        }
         user_data['user_info'] = []
 
         user_data['user_info'].append({
@@ -38,7 +40,8 @@ class Read_Emails:
         self.main_client = main_client
 
     def read(self):
-        UIDs = self.main_client.search(['ALL'])[-30:]
+        limit_UID = JSON_data().read_json()
+        UIDs = self.main_client.search(['ALL'])[-limit_UID['uid_limit']:]
         print(f"You have {'{:,}'.format(len(self.main_client.search(['ALL'])))} emails in your inbox.")
         if UIDs[-1] == 0:
             UIDs = UIDs[:-1]
@@ -47,7 +50,9 @@ class Read_Emails:
         rawMessage = self.main_client.fetch(UIDs, ['BODY[]', 'FLAGS'])
         for index, i in enumerate(rawMessage, start=1):
             message = pyzmail.PyzMessage.factory(rawMessage[i][b'BODY[]'])
-            print(f"#{index} - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
+            print(colorama.Fore.GREEN, f'\n\n\n#{index}', colorama.Style.RESET_ALL,
+                f" - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
+            print(message.text_part.get_payload().decode('utf-8'))
 
 
 class Client_Connection:

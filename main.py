@@ -6,6 +6,7 @@ import os
 import hashlib
 import base64
 import colorama
+import argparse
 
 
 class Client_User:
@@ -30,7 +31,7 @@ class Client_User:
 
     def login(self):
         client = Client_Connection(self.email, self.password).make_connection()
-        client.select_folder('INBOX', readonly=True)        
+        client.select_folder('INBOX', readonly=True)
         Read_Emails(client).read()
 
 
@@ -49,11 +50,13 @@ class Read_Emails:
         print(colorama.Fore.YELLOW, f"Getting {len(UIDs)} recent emails...", colorama.Style.RESET_ALL)
         rawMessage = self.main_client.fetch(UIDs, ['BODY[]', 'FLAGS'])
         for index, i in enumerate(rawMessage, start=1):
-            message = pyzmail.PyzMessage.factory(rawMessage[i][b'BODY[]'])
-            print(colorama.Fore.GREEN, f'\n\n\n#{index}', colorama.Style.RESET_ALL,
-                f" - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
-            print(message.text_part.get_payload().decode('utf-8'))
-
+            try:
+                message = pyzmail.PyzMessage.factory(rawMessage[i][b'BODY[]'])
+                print(colorama.Fore.GREEN, f'\n\n\n#{index}', colorama.Style.RESET_ALL,
+                    f" - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
+                print(message.text_part.get_payload().decode('utf-8'))
+            except AttributeError:
+                continue
 
 class Client_Connection:
 
@@ -116,16 +119,34 @@ def prompt_user():
         Client_User(name, email, passwd).register()
 
 
+def change_uid_limit(num):
+    source = JSON_data().read_json()
+
+    source['uid_limit'] = num
+    JSON_data().write_json(source)
+    print(colorama.Fore.GREEN, f'[*] Setted UID limit to {num}',
+            colorama.Style.RESET_ALL)
+
+
 if __name__ == '__main__':
     colorama.init()
-    if not os.path.exists('user.json'):
-        prompt_user()
+    parser = argparse.ArgumentParser(description='Reads Emails')
+
+    parser.add_argument('--set_uid_limit', type=int,
+                        action='store', help='Sets UID limit.')
+
+    args = parser.parse_args()
+    if args.set_uid_limit:
+        change_uid_limit(args.set_uid_limit)
     else:
-        passwd = getpass.getpass('Enter Password: ')
-        source = JSON_data().read_json()
-        try:
-            for creds in source['user_info']:
-                Client_User(creds['username'], creds['email'], password_manager(passwd).verify_pass()).login()
-        except SystemError as err:
-            print(colorama.Fore.RED,
-                f'[!!] Something went wrong! {err}', colorama.Style.RESET_ALL)
+        if not os.path.exists('user.json'):
+            prompt_user()
+        else:
+            passwd = getpass.getpass('Enter Password: ')
+            source = JSON_data().read_json()
+            try:
+                for creds in source['user_info']:
+                    Client_User(creds['username'], creds['email'], password_manager(passwd).verify_pass()).login()
+            except SystemError as err:
+                print(colorama.Fore.RED,
+                    f'[!!] Something went wrong! {err}', colorama.Style.RESET_ALL)

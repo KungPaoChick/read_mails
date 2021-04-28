@@ -55,7 +55,7 @@ class Read_Emails:
                 print(colorama.Fore.GREEN, f'\n\n\n#{index}', colorama.Style.RESET_ALL,
                     f" - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
                 print(message.text_part.get_payload().decode('utf-8'))
-            except AttributeError:
+            except (AttributeError, UnicodeDecodeError):
                 continue
 
 class Client_Connection:

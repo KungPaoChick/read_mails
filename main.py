@@ -1,12 +1,12 @@
+from getpass import getpass
+from pyzmail import PyzMessage
+from base64 import b64encode, b64decode
+from hashlib import pbkdf2_hmac
+from argparse import RawDescriptionHelpFormatter, ArgumentParser
 import imapclient
-import getpass
-import pyzmail
 import json
 import os
-import hashlib
-import base64
 import colorama
-import argparse
 
 
 class Client_User:
@@ -51,7 +51,7 @@ class Read_Emails:
         rawMessage = self.main_client.fetch(UIDs, ['BODY[]', 'FLAGS'])
         for index, i in enumerate(rawMessage, start=1):
             try:
-                message = pyzmail.PyzMessage.factory(rawMessage[i][b'BODY[]'])
+                message = PyzMessage.factory(rawMessage[i][b'BODY[]'])
                 print(colorama.Fore.GREEN, f'\n\n\n#{index}', colorama.Style.RESET_ALL,
                     f" - {message.get_subject()} from: {message.get_addresses('from')[0][0]}\n")
                 print(message.text_part.get_payload().decode('utf-8'))
@@ -81,15 +81,15 @@ class password_manager:
         self.password = password
 
     def hash_func(self):
-        salt = base64.b64encode(os.urandom(64)).decode('utf-8')
-        key = base64.b64encode(hashlib.pbkdf2_hmac('sha256', self.password.encode(), base64.b64decode(salt.encode('utf-8')), 100000)).decode('utf-8')
+        salt = b64encode(os.urandom(64)).decode('utf-8')
+        key = b64encode(pbkdf2_hmac('sha256', self.password.encode(), b64decode(salt.encode('utf-8')), 100000)).decode('utf-8')
         return salt+key
 
     def verify_pass(self):
         source = JSON_data().read_json()
         for x in source['user_info']:
-            new_key = hashlib.pbkdf2_hmac('sha256', self.password.encode('utf-8'), base64.b64decode(x['password'][:88].encode('utf-8')), 100000)
-            if new_key == base64.b64decode(x['password'][88:].encode('utf-8')):
+            new_key = pbkdf2_hmac('sha256', self.password.encode('utf-8'), b64decode(x['password'][:88].encode('utf-8')), 100000)
+            if new_key == b64decode(x['password'][88:].encode('utf-8')):
                 print(colorama.Fore.GREEN,
                     f"[*] Authentication Successful! Welcome, {x['username']}", colorama.Style.RESET_ALL)
                 return self.password
@@ -110,8 +110,8 @@ class JSON_data:
 def prompt_user():
     name = str(input('Enter name: '))
     email = str(input('Enter email: '))
-    passwd = getpass.getpass('Enter Password: ')
-    conf_passwd = getpass.getpass('Re-Enter Password: ')
+    passwd = getpass('Enter Password: ')
+    conf_passwd = getpass('Re-Enter Password: ')
     if not passwd == conf_passwd:
         print(colorama.Fore.RED, '[!!] Passwords do not match!',
             colorama.Style.RESET_ALL)
@@ -130,7 +130,8 @@ def change_uid_limit(num):
 
 if __name__ == '__main__':
     colorama.init()
-    parser = argparse.ArgumentParser(description='Reads Emails')
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+                            description='Reads Emails')
 
     parser.add_argument('--set_uid_limit', type=int,
                         action='store', help='Sets UID limit.')
@@ -142,7 +143,7 @@ if __name__ == '__main__':
         if not os.path.exists('user.json'):
             prompt_user()
         else:
-            passwd = getpass.getpass('Enter Password: ')
+            passwd = getpass('Enter Password: ')
             source = JSON_data().read_json()
             try:
                 for creds in source['user_info']:

@@ -58,6 +58,7 @@ class Read_Emails:
             except (AttributeError, UnicodeDecodeError):
                 continue
 
+
 class Client_Connection:
 
     def __init__(self, client_email, client_password):
@@ -93,6 +94,8 @@ class password_manager:
                 print(colorama.Fore.GREEN,
                     f"[*] Authentication Successful! Welcome, {x['username']}", colorama.Style.RESET_ALL)
                 return self.password
+            else:
+                print(colorama.Fore.RED, f'[!!] Authentication Failed!', colorama.Style.RESET_ALL)
 
 
 class JSON_data:
@@ -107,25 +110,41 @@ class JSON_data:
             return source
 
 
-def prompt_user():
-    name = str(input('Enter name: '))
-    email = str(input('Enter email: '))
-    passwd = getpass('Enter Password: ')
-    conf_passwd = getpass('Re-Enter Password: ')
-    if not passwd == conf_passwd:
-        print(colorama.Fore.RED, '[!!] Passwords do not match!',
-            colorama.Style.RESET_ALL)
-    else:
-        Client_User(name, email, passwd).register()
+class Config:
 
+    def change_uid_limit(self, num):
+        source = JSON_data().read_json()
 
-def change_uid_limit(num):
-    source = JSON_data().read_json()
+        source['uid_limit'] = num
+        JSON_data().write_json(source)
+        print(colorama.Fore.GREEN, f'[*] Setted UID limit to {num}',
+                colorama.Style.RESET_ALL)
 
-    source['uid_limit'] = num
-    JSON_data().write_json(source)
-    print(colorama.Fore.GREEN, f'[*] Setted UID limit to {num}',
-            colorama.Style.RESET_ALL)
+    def change_username(self, name):
+        verification = getpass('Enter Password: ')
+        if bool(password_manager(verification).verify_pass()):
+            source = JSON_data().read_json()
+
+            for content in source['user_info']:
+                if content['username'] == name:
+                    print(colorama.Fore.YELLOW,
+                        f'[!] Username is already {name}', colorama.Style.RESET_ALL)
+                else:    
+                    content['username'] = name
+                    JSON_data().write_json(source) 
+                    print(colorama.Fore.GREEN,
+                        f'[*] Username Successfully changed to: {name}', colorama.Style.RESET_ALL)
+
+    def prompt_user():
+        name = str(input('Enter name: '))
+        email = str(input('Enter email: '))
+        passwd = getpass('Enter Password: ')
+        conf_passwd = getpass('Re-Enter Password: ')
+        if not passwd == conf_passwd:
+            print(colorama.Fore.RED, '[!!] Passwords do not match!',
+                colorama.Style.RESET_ALL)
+        else:
+            Client_User(name, email, passwd).register()
 
 
 if __name__ == '__main__':
@@ -136,12 +155,17 @@ if __name__ == '__main__':
     parser.add_argument('--set_uid_limit', type=int,
                         action='store', help='Sets UID limit.')
 
+    parser.add_argument('--set_name', type=str,
+                        action='store', help='Changes username')
+
     args = parser.parse_args()
     if args.set_uid_limit:
-        change_uid_limit(args.set_uid_limit)
+        Config().change_uid_limit(args.set_uid_limit)
+    elif args.set_name:
+        Config().change_username(args.set_name)
     else:
         if not os.path.exists('user.json'):
-            prompt_user()
+            Config().prompt_user()
         else:
             passwd = getpass('Enter Password: ')
             source = JSON_data().read_json()

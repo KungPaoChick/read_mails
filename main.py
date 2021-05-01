@@ -135,7 +135,7 @@ class Config:
                     print(colorama.Fore.GREEN,
                         f'[*] Username Successfully changed to: {name}', colorama.Style.RESET_ALL)
 
-    def prompt_user():
+    def prompt_user(self):
         name = str(input('Enter name: '))
         email = str(input('Enter email: '))
         passwd = getpass('Enter Password: ')

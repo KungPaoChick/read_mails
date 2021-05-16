@@ -25,7 +25,7 @@ class Client_User:
         user_data['user_info'].append({
             'username': self.username,
             'email': self.email,
-            'password': password_manager(self.password).hash_func()
+            'password': Password_Manager(self.password).hash_func()
         })
         JSON_data().write_json(user_data)
 
@@ -76,7 +76,7 @@ class Client_Connection:
                 f'[!!] Something wrong just happened! {logerr}', colorama.Style.RESET_ALL)
 
 
-class password_manager:
+class Password_Manager:
 
     def __init__(self, password):
         self.password = password
@@ -96,6 +96,7 @@ class password_manager:
                 return self.password
             else:
                 print(colorama.Fore.RED, f'[!!] Authentication Failed!', colorama.Style.RESET_ALL)
+                quit()
 
 
 class JSON_data:
@@ -122,16 +123,16 @@ class Config:
 
     def change_username(self, name):
         verification = getpass('Enter Password: ')
-        if bool(password_manager(verification).verify_pass()):
+        if bool(Password_Manager(verification).verify_pass()):
             source = JSON_data().read_json()
 
             for content in source['user_info']:
                 if content['username'] == name:
                     print(colorama.Fore.YELLOW,
                         f'[!] Username is already {name}', colorama.Style.RESET_ALL)
-                else:    
+                else:
                     content['username'] = name
-                    JSON_data().write_json(source) 
+                    JSON_data().write_json(source)
                     print(colorama.Fore.GREEN,
                         f'[*] Username Successfully changed to: {name}', colorama.Style.RESET_ALL)
 
@@ -146,6 +147,11 @@ class Config:
         else:
             Client_User(name, email, passwd).register()
 
+    def switch_user(self):
+        confirm = getpass('Enter Old Password: ')
+        if bool(Password_Manager(confirm).verify_pass()):
+            Config().prompt_user()
+
 
 if __name__ == '__main__':
     colorama.init()
@@ -158,11 +164,16 @@ if __name__ == '__main__':
     parser.add_argument('--set_name', type=str,
                         action='store', help='Changes username')
 
+    parser.add_argument('--switch_user',
+                        action='store_true', help='Switch User')
+
     args = parser.parse_args()
     if args.set_uid_limit:
         Config().change_uid_limit(args.set_uid_limit)
     elif args.set_name:
         Config().change_username(args.set_name)
+    elif args.switch_user:
+        Config().switch_user()
     else:
         if not os.path.exists('user.json'):
             Config().prompt_user()
@@ -171,7 +182,7 @@ if __name__ == '__main__':
             source = JSON_data().read_json()
             try:
                 for creds in source['user_info']:
-                    Client_User(creds['username'], creds['email'], password_manager(passwd).verify_pass()).login()
+                    Client_User(creds['username'], creds['email'], Password_Manager(passwd).verify_pass()).login()
             except SystemError as err:
                 print(colorama.Fore.RED,
                     f'[!!] Something went wrong! {err}', colorama.Style.RESET_ALL)

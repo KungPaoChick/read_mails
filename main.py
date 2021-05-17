@@ -152,6 +152,16 @@ class Config:
         if bool(Password_Manager(confirm).verify_pass()):
             Config().prompt_user()
 
+    def current_user(self):
+        if os.path.exists('user.json'):
+            source = JSON_data().read_json()
+            for info in source['user_info']:
+                print(colorama.Fore.YELLOW, f"[!] Current User: ",
+                        colorama.Style.RESET_ALL, f"Username: {info['username']} - Email: {info['email']}")
+        else:
+            print(colorama.Fore.RED, '[!!] No user is currently registered.',
+                    colorama.Style.RESET_ALL)
+
 
 if __name__ == '__main__':
     colorama.init()
@@ -167,6 +177,10 @@ if __name__ == '__main__':
     parser.add_argument('--switch_user',
                         action='store_true', help='Switch User')
 
+    parser.add_argument('--current_user',
+                        action='store_true',
+                        help='Views current user')
+
     args = parser.parse_args()
     if args.set_uid_limit:
         Config().change_uid_limit(args.set_uid_limit)
@@ -174,6 +188,8 @@ if __name__ == '__main__':
         Config().change_username(args.set_name)
     elif args.switch_user:
         Config().switch_user()
+    elif args.current_user:
+        Config().current_user()
     else:
         if not os.path.exists('user.json'):
             Config().prompt_user()

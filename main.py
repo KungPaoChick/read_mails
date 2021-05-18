@@ -32,10 +32,10 @@ class Client_User:
     def login(self):
         client = Client_Connection(self.email, self.password).make_connection()
         client.select_folder('INBOX', readonly=True)
-        Read_Emails(client).read()
+        Emails(client).read()
 
 
-class Read_Emails:
+class Emails:
 
     def __init__(self, main_client):
         self.main_client = main_client
@@ -194,11 +194,14 @@ if __name__ == '__main__':
         if not os.path.exists('user.json'):
             Config().prompt_user()
         else:
-            passwd = getpass('Enter Password: ')
-            source = JSON_data().read_json()
             try:
-                for creds in source['user_info']:
-                    Client_User(creds['username'], creds['email'], Password_Manager(passwd).verify_pass()).login()
-            except SystemError as err:
-                print(colorama.Fore.RED,
-                    f'[!!] Something went wrong! {err}', colorama.Style.RESET_ALL)
+                passwd = getpass('Enter Password: ')
+                source = JSON_data().read_json()
+                try:
+                    for creds in source['user_info']:
+                        Client_User(creds['username'], creds['email'], Password_Manager(passwd).verify_pass()).login()
+                except SystemError as err:
+                    print(colorama.Fore.RED,
+                        f'[!!] Something went wrong! {err}', colorama.Style.RESET_ALL)
+            except KeyboardInterrupt:
+                print('\nStopped!')

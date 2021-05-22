@@ -47,7 +47,7 @@ class Emails:
         if UIDs[-1] == 0:
             UIDs = UIDs[:-1]
 
-        print(colorama.Fore.YELLOW, f"Getting {len(UIDs)} recent emails...", colorama.Style.RESET_ALL)
+        print(colorama.Fore.YELLOW, f"[!] Getting {'{:,}'.format(len(UIDs))} recent emails...", colorama.Style.RESET_ALL)
         rawMessage = self.main_client.fetch(UIDs, ['BODY[]', 'FLAGS'])
         for index, i in enumerate(rawMessage, start=1):
             try:
@@ -118,7 +118,7 @@ class Config:
 
         source['uid_limit'] = num
         JSON_data().write_json(source)
-        print(colorama.Fore.GREEN, f'[*] Setted UID limit to {num}',
+        print(colorama.Fore.GREEN, f"[*] Setted UID limit to {'{:,}'.format(num)}",
                 colorama.Style.RESET_ALL)
 
     def change_username(self, name):

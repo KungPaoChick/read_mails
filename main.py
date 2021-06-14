@@ -18,10 +18,9 @@ class Client_User:
 
     def register(self):
         user_data = {
-            'uid_limit': 5
+            'uid_limit': 5,
+            'user_info': []
         }
-        user_data['user_info'] = []
-
         user_data['user_info'].append({
             'username': self.username,
             'email': self.email,
